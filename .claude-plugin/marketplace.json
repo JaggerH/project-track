@@ -1,0 +1,15 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "project-track",
+  "description": "Project tracking for Claude Code — a project's live state plus the decision trail that produced it.",
+  "owner": {
+    "name": "Jagger.H"
+  },
+  "plugins": [
+    {
+      "name": "track",
+      "source": "./plugins/track",
+      "description": "Project tracking — snapshot of current state plus a decision trail, for code and non-code projects alike."
+    }
+  ]
+}
