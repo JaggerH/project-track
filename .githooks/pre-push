@@ -18,16 +18,18 @@ while read local_ref local_sha remote_ref remote_sha; do
 
   # Did anything under plugins/track/ change in this push?
   if git diff --name-only "$diff_base" "$local_sha" 2>/dev/null | grep -q '^plugins/track/'; then
-    echo "Detected changes to the track plugin. Triggering jagger-skills-marketplace sync after push completes..."
+    echo "Detected changes to the track plugin. Marketplace sync will trigger after push (see /tmp/track-sync.log)."
+    # Redirect the background subshell's fds to a log — otherwise it holds the
+    # push's stdout/stderr pipe open and git push blocks until this finishes.
     (
       sleep 5
       if command -v gh >/dev/null 2>&1; then
         gh workflow run sync-skills.yml --repo JaggerH/jagger-skills-marketplace --ref master
-        echo "GitHub workflow trigger request sent to jagger-skills-marketplace."
+        echo "$(date): marketplace sync triggered."
       else
-        echo "Error: gh CLI not found on PATH. Cannot trigger marketplace sync automatically."
+        echo "$(date): gh CLI not on PATH; marketplace sync NOT triggered."
       fi
-    ) &
+    ) >/tmp/track-sync.log 2>&1 &
     disown
     break
   fi
