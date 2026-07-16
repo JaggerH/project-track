@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# pre-push hook: trigger the marketplace sync when the track skill changes.
+# Reads pushed refs from stdin: <local ref> <local sha1> <remote ref> <remote sha1>
+#
+# Enable once per clone with:  git config core.hooksPath .githooks
+
+remote_name="$1"
+remote_url="$2"
+
+while read local_ref local_sha remote_ref remote_sha; do
+  # All-zero remote sha means a new branch — diff against the local sha's parent.
+  if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+    diff_base="${local_sha}~1"
+  else
+    diff_base="$remote_sha"
+  fi
+
+  # Did anything under plugins/track/ change in this push?
+  if git diff --name-only "$diff_base" "$local_sha" 2>/dev/null | grep -q '^plugins/track/'; then
+    echo "Detected changes to the track plugin. Triggering jagger-skills-marketplace sync after push completes..."
+    (
+      sleep 5
+      if command -v gh >/dev/null 2>&1; then
+        gh workflow run sync-skills.yml --repo JaggerH/jagger-skills-marketplace --ref master
+        echo "GitHub workflow trigger request sent to jagger-skills-marketplace."
+      else
+        echo "Error: gh CLI not found on PATH. Cannot trigger marketplace sync automatically."
+      fi
+    ) &
+    disown
+    break
+  fi
+done

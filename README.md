@@ -136,6 +136,20 @@ History self-links into chains; the snapshot only ever points at each chain's he
 
 `/track` finds your root by walking up from the working directory, then falling back to the `## Project Tracking` pointer in your global `CLAUDE.md`. Both topologies work: one central root for everything, or a root inside each repo — nearest wins.
 
+## Maintainer note: marketplace sync
+
+This repo is the source of truth for the `track` plugin. It is also mirrored into the private
+`jagger-skills-marketplace` by a one-directional CI sync. `.githooks/pre-push` detects changes
+under `plugins/track/` and triggers that sync on push. Enable it once per clone:
+
+```
+git config core.hooksPath .githooks
+```
+
+Without it, edits still land here but the marketplace won't auto-update until its daily cron
+run. Triggering `gh workflow run sync-skills.yml --repo JaggerH/jagger-skills-marketplace` by
+hand does the same thing.
+
 ## License
 
 MIT
